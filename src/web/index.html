@@ -1,5 +1,486 @@
 <!doctype html>
 <html lang="uk">
-  <head><meta charset="utf-8"><title>Форма відвідувача</title></head>
-  <body><h1>Форма відгуку — ДОЛОТА</h1></body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DOLOTA | Реєстрація контакту</title>
+    <style>
+      :root {
+        --brand-primary: #8a5a2c;
+        --brand-blue: #3a7bd5;
+        --brand-yellow: #ffd200;
+        --bg: #111;
+        --card: #1a120b;
+        --card-2: #24170e;
+        --text: #f7f3ef;
+        --muted: #cfc8c2;
+        --input: #2b1d13;
+        --input-border: #5a3a21;
+        --ok: #2fbf71;
+        --warn: #f1b84b;
+        --err: #e76f51;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        height: auto;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+        background: radial-gradient(1200px 800px at 10% -20%, var(--brand-yellow) 0%, transparent 30%),
+          radial-gradient(1200px 800px at 110% 120%, var(--brand-blue) 0%, transparent 30%),
+          linear-gradient(180deg, #0f0a05 0%, #120c07 100%);
+        background-repeat: no-repeat;
+        color: var(--text);
+        line-height: 1.45;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(1200px 800px at 10% -20%, var(--brand-yellow) 0%, transparent 30%),
+          radial-gradient(1200px 800px at 110% 120%, var(--brand-blue) 0%, transparent 30%),
+          linear-gradient(180deg, #0f0a05 0%, #120c07 100%);
+        background-repeat: no-repeat;
+        z-index: -1;
+      }
+
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+        width: 100%;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 0 24px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.35);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        font-weight: 800;
+        letter-spacing: 0.12em;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand .sub {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .status-badges {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .ua-flag {
+        width: 18px;
+        height: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+        background: linear-gradient(#62a8ff 0 50%, #ffd24a 50% 100%);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      }
+
+      .card {
+        background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+        border: 1px solid var(--input-border);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(2px);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 22px;
+      }
+
+      .card p {
+        margin-top: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      @media (max-width: 720px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .req::after {
+        content: " *";
+        color: var(--warn);
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--input-border);
+        background: var(--input);
+        color: var(--text);
+        outline: none;
+        font-size: 15px;
+        resize: vertical;
+        min-height: 46px;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: #a9988b;
+      }
+
+      textarea {
+        min-height: 120px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      button {
+        padding: 12px 18px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(180deg, var(--brand-primary) 0%, #74421b 100%);
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        transition: transform 0.08s ease, filter 0.2s ease;
+      }
+
+      button:hover,
+      .cta a:hover,
+      .call-btn:hover {
+        filter: brightness(1.08);
+      }
+
+      button:active,
+      .cta a:active,
+      .call-btn:active {
+        transform: translateY(1px);
+      }
+
+      .sub {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+
+      .status {
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      .status.ok {
+        color: var(--ok);
+      }
+
+      .status.err {
+        color: var(--err);
+      }
+
+      .catalogs {
+        margin-top: 24px;
+      }
+
+      .catalogs h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 18px;
+      }
+
+      .catalogs ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .catalogs a {
+        display: block;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #1e140c;
+        border: 1px solid var(--input-border);
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .catalogs small {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        text-align: center;
+        margin-top: 26px;
+      }
+
+      .cta a,
+      .call-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, var(--brand-blue) 0%, #2759a7 100%);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        transition: transform 0.08s ease, filter 0.2s ease;
+      }
+
+      .call-btn {
+        background: linear-gradient(180deg, var(--brand-primary) 0%, #74421b 100%);
+      }
+
+      footer {
+        margin-top: 40px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      footer .hl {
+        color: var(--brand-yellow);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="brand">
+          <div class="logo" aria-hidden="true">DO</div>
+          <div>
+            <h1>DOLOTA</h1>
+            <p class="sub">Реєстрація контакту відвідувача стенду</p>
+          </div>
+        </div>
+        <div class="status-badges">
+          <span class="badge"><span class="ua-flag" aria-hidden="true"></span> Made in Ukraine</span>
+          <span class="badge">Каталоги <strong>2024</strong></span>
+        </div>
+      </header>
+
+      <main class="card">
+        <h2>Заповніть контактну форму</h2>
+        <p>
+          Щоб отримати доступ до каталогів та матеріалів DOLOTA, заповніть форму нижче. Позначені поля є
+          <span class="req">обовʼязковими</span> для відправлення.
+        </p>
+        <form class="form" action="#" method="post">
+          <div class="grid">
+            <div class="field">
+              <label class="req" for="full-name">Імʼя та прізвище</label>
+              <input
+                id="full-name"
+                name="full-name"
+                type="text"
+                placeholder="Наприклад, Анна Мельник"
+                autocomplete="name"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="company">Компанія</label>
+              <input
+                id="company"
+                name="company"
+                type="text"
+                placeholder="Назва компанії"
+                autocomplete="organization"
+              />
+            </div>
+            <div class="field">
+              <label for="position">Посада</label>
+              <input
+                id="position"
+                name="position"
+                type="text"
+                placeholder="Ким ви працюєте?"
+                autocomplete="organization-title"
+              />
+            </div>
+            <div class="field">
+              <label class="req" for="phone">Номер телефону</label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+380 00 000 00 00"
+                autocomplete="tel"
+                required
+              />
+            </div>
+            <div class="field">
+              <label class="req" for="email">Робочий email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <div class="field">
+              <label class="req" for="interest">Що вас цікавить</label>
+              <select id="interest" name="interest" required>
+                <option value="" disabled selected>Обрати напрям</option>
+                <option value="catalog">Каталог бурового інструменту</option>
+                <option value="consulting">Консультація зі спеціалістом</option>
+                <option value="partnership">Партнерство та співпраця</option>
+                <option value="other">Інше</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="margin-top: 18px;">
+            <label for="message">Коментар або питання</label>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Напишіть, що саме вас цікавить або коли краще зв'язатися"
+            ></textarea>
+          </div>
+          <div class="note">Натискаючи кнопку, ви погоджуєтесь з обробкою персональних даних.</div>
+          <div class="actions">
+            <button type="submit">Надіслати заявку</button>
+            <div class="sub">Чекайте на лист з підтвердженням та каталогами.</div>
+          </div>
+          <p class="status ok" role="status">Статус: очікуємо дані відвідувача.</p>
+        </form>
+
+        <section class="after-submit">
+          <h2>Після відправки</h2>
+          <p class="sub">
+            Ви отримаєте лист із прямими посиланнями на матеріали та контакт нашого менеджера. Збережіть їх, щоби швидко
+            повернутися до каталогу.
+          </p>
+          <div class="catalogs" aria-live="polite">
+            <h3>Каталоги та матеріали</h3>
+            <ul>
+              <li>
+                <a href="#">Каталог продуктів DOLOTA</a>
+                <small>Останнє оновлення: березень 2024</small>
+              </li>
+              <li>
+                <a href="#">Кейс-стаді: ефективні бурові рішення</a>
+                <small>PDF · 12 сторінок</small>
+              </li>
+              <li>
+                <a href="#">Презентація сервісів та підтримки</a>
+                <small>Документ для партнерів</small>
+              </li>
+            </ul>
+          </div>
+          <div class="cta-row">
+            <div class="cta">
+              <a href="#">Переглянути каталог онлайн</a>
+            </div>
+            <a class="call-btn" href="tel:+380441234567">Звʼязатися з менеджером</a>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        © <span class="hl">DOLOTA</span>, 2024. Ми цінуємо вашу довіру та відкритість до співпраці.
+      </footer>
+    </div>
+  </body>
 </html>
