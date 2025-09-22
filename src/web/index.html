@@ -1,5 +1,345 @@
 <!doctype html>
 <html lang="uk">
-  <head><meta charset="utf-8"><title>Форма відвідувача</title></head>
-  <body><h1>Форма відгуку — ДОЛОТА</h1></body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Форма відгуку — ДОЛОТА</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        max-width: 720px;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      form,
+      .otp-panel,
+      .event-log {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      input,
+      textarea,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        border: 1px solid #cbd5f5;
+        font-size: 1rem;
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      button {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s ease;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      .otp-actions {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .status-message {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        display: none;
+      }
+
+      .status-message.success {
+        background: #dcfce7;
+        color: #14532d;
+        border: 1px solid #86efac;
+      }
+
+      .status-message.error {
+        background: #fee2e2;
+        color: #7f1d1d;
+        border: 1px solid #fecaca;
+      }
+
+      .event-log pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 8px;
+        max-height: 240px;
+        overflow-y: auto;
+        font-size: 0.85rem;
+      }
+
+      .small {
+        font-size: 0.85rem;
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Форма відгуку — ДОЛОТА</h1>
+
+    <div id="status" class="status-message"></div>
+
+    <form id="feedback-form">
+      <label for="firstName">Ім’я *</label>
+      <input id="firstName" name="firstName" type="text" autocomplete="given-name" required />
+
+      <label for="lastName">Прізвище *</label>
+      <input id="lastName" name="lastName" type="text" autocomplete="family-name" required />
+
+      <label for="phone">Телефон *</label>
+      <input id="phone" name="phone" type="tel" autocomplete="tel" required />
+
+      <label for="email">Email *</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
+
+      <label for="company">Компанія</label>
+      <input id="company" name="company" type="text" autocomplete="organization" />
+
+      <label for="geography">Регіон/країна</label>
+      <input id="geography" name="geography" type="text" />
+
+      <label for="techMetrics">Технічні метрики (JSON або текст)</label>
+      <textarea id="techMetrics" name="techMetrics" placeholder='{"bitType":"PDC","hours":12}'></textarea>
+
+      <button type="submit">Надіслати форму</button>
+    </form>
+
+    <section class="otp-panel">
+      <h2>SMS-підтвердження</h2>
+      <p class="small">Код надходить на телефон, який ви вказали у формі.</p>
+      <div class="otp-actions">
+        <button id="send-otp" type="button">Надіслати OTP</button>
+        <input id="otp-code" type="text" placeholder="Введіть 6-значний код" />
+        <button id="verify-otp" type="button">Підтвердити номер</button>
+      </div>
+    </section>
+
+    <section class="event-log">
+      <h2>Журнал подій</h2>
+      <p class="small">Події зберігаються локально у браузері та на сервері.</p>
+      <pre id="event-log"></pre>
+    </section>
+
+    <script>
+      const API_BASE_URL = window.location.origin;
+      let csrfToken = null;
+      let eventLog = [];
+
+      function persistEvents() {
+        localStorage.setItem('feedbackEvents', JSON.stringify(eventLog));
+      }
+
+      function renderEventLog() {
+        const logContainer = document.getElementById('event-log');
+        logContainer.textContent = eventLog.map((entry) => JSON.stringify(entry)).join('\n');
+      }
+
+      function trackEvent(type, details = {}) {
+        const entry = {
+          type,
+          details,
+          timestamp: new Date().toISOString()
+        };
+        eventLog.push(entry);
+        persistEvents();
+        renderEventLog();
+      }
+
+      function showStatus(message, mode = 'success') {
+        const statusElement = document.getElementById('status');
+        statusElement.textContent = message;
+        statusElement.classList.remove('success', 'error');
+        statusElement.classList.add(mode);
+        statusElement.style.display = 'block';
+      }
+
+      function clearStatus() {
+        const statusElement = document.getElementById('status');
+        statusElement.textContent = '';
+        statusElement.style.display = 'none';
+      }
+
+      async function fetchCsrfToken() {
+        const response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
+          credentials: 'include'
+        });
+        if (!response.ok) {
+          throw new Error('Не вдалося отримати CSRF токен');
+        }
+        const data = await response.json();
+        csrfToken = data.token;
+        trackEvent('csrf_token_received', {});
+      }
+
+      async function postJson(url, payload) {
+        if (!csrfToken) {
+          await fetchCsrfToken();
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken
+          },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        if (response.status === 403) {
+          await fetchCsrfToken();
+        }
+
+        return response;
+      }
+
+      function parseTechMetrics(rawValue) {
+        const value = rawValue.trim();
+        if (!value) {
+          return null;
+        }
+
+        try {
+          return JSON.parse(value);
+        } catch (error) {
+          return value;
+        }
+      }
+
+      async function handleFormSubmit(event) {
+        event.preventDefault();
+        clearStatus();
+
+        const formData = new FormData(event.target);
+        const payload = {
+          firstName: formData.get('firstName').trim(),
+          lastName: formData.get('lastName').trim(),
+          phone: formData.get('phone').trim(),
+          email: formData.get('email').trim(),
+          company: formData.get('company').trim() || null,
+          geography: formData.get('geography').trim() || null,
+          techMetrics: parseTechMetrics(formData.get('techMetrics') || '')
+        };
+
+        try {
+          const response = await postJson(`${API_BASE_URL}/api/feedback`, payload);
+          const data = await response.json().catch(() => ({}));
+
+          if (response.ok) {
+            trackEvent('feedback_sent', { phone: payload.phone });
+            showStatus('Дякуємо! Відгук збережено.', 'success');
+          } else {
+            trackEvent('feedback_error', { status: response.status, message: data.message });
+            showStatus(data.message || 'Сталася помилка під час збереження.', 'error');
+          }
+        } catch (error) {
+          trackEvent('feedback_error', { message: error.message });
+          showStatus('Не вдалося надіслати форму. Перевірте підключення до мережі.', 'error');
+        }
+      }
+
+      async function handleSendOtp() {
+        clearStatus();
+        const phone = document.getElementById('phone').value.trim();
+        if (!phone) {
+          showStatus('Вкажіть номер телефону у формі.', 'error');
+          return;
+        }
+
+        try {
+          const response = await postJson(`${API_BASE_URL}/api/send-otp`, { phone });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.ok) {
+            trackEvent('otp_requested_client', { phone, expiresAt: data.expiresAt });
+            showStatus('Код надіслано. Перевірте SMS.', 'success');
+          } else {
+            trackEvent('otp_request_error', { status: response.status, message: data.message });
+            showStatus(data.message || 'Не вдалося надіслати OTP.', 'error');
+          }
+        } catch (error) {
+          trackEvent('otp_request_error', { message: error.message });
+          showStatus('Не вдалося надіслати OTP. Перевірте підключення до мережі.', 'error');
+        }
+      }
+
+      async function handleVerifyOtp() {
+        clearStatus();
+        const phone = document.getElementById('phone').value.trim();
+        const code = document.getElementById('otp-code').value.trim();
+
+        if (!phone || !code) {
+          showStatus('Вкажіть номер телефону та код з SMS.', 'error');
+          return;
+        }
+
+        try {
+          const response = await postJson(`${API_BASE_URL}/api/verify-otp`, { phone, code });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.ok) {
+            trackEvent('otp_verified_client', { phone });
+            showStatus('Номер підтверджено!', 'success');
+          } else {
+            trackEvent('otp_verify_error', { status: response.status, message: data.message });
+            showStatus(data.message || 'Код не підтверджено.', 'error');
+          }
+        } catch (error) {
+          trackEvent('otp_verify_error', { message: error.message });
+          showStatus('Не вдалося перевірити код. Перевірте підключення до мережі.', 'error');
+        }
+      }
+
+      function init() {
+        try {
+          eventLog = JSON.parse(localStorage.getItem('feedbackEvents')) || [];
+        } catch (error) {
+          eventLog = [];
+        }
+
+        renderEventLog();
+
+        document.getElementById('feedback-form').addEventListener('submit', handleFormSubmit);
+        document.getElementById('send-otp').addEventListener('click', handleSendOtp);
+        document.getElementById('verify-otp').addEventListener('click', handleVerifyOtp);
+
+        fetchCsrfToken().catch((error) => {
+          trackEvent('csrf_error', { message: error.message });
+          showStatus(error.message, 'error');
+        });
+      }
+
+      init();
+    </script>
+  </body>
 </html>
